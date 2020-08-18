@@ -2,8 +2,9 @@ import minerl
 import gym
 import numpy as np
 import math
-import random
 import tensorflow.keras as keras
+from collections import deque
+import random
 
     #observation space: compassangle:array,
     # inventory:dict with dirt number,
@@ -11,20 +12,26 @@ import tensorflow.keras as keras
 
     #action space: attack, back, forward, jump, left, right, place, sneak, sprint, camera[2]
 
-NUM_ACTION_SPACE = 10
+NUM_ACTION_SPACE = 64
 
 class Agent:
     #set hyperparameters
     def __init__(self,
                  replay_memory_size,
                  min_replay_size,
+
                  epsilon_i,
                  epsilon_decay,
                  epsilon_min,
+
                  learning_rate,
                  discount_rate,
+
+                 target_update_freq,
+
                  minibatch_size,
                  minibatch_step_size,
+
                  episode_num):
         self.replay_memory_size = replay_memory_size
         self.min_replay_size = min_replay_size
@@ -33,6 +40,7 @@ class Agent:
         self.epsilon_min = epsilon_min
         self.learning_rate = learning_rate
         self.discount_rate = discount_rate
+        self.target_update_freq = target_update_freq
         self.minibatch_size = minibatch_size
         self.minibatch_step_size = minibatch_step_size
         self.episode_num = episode_num
@@ -40,6 +48,12 @@ class Agent:
         self.main_model = self.intrinsic_create_model()
         self.target_model = self.intrinsic_create_model()
         self.target_model.set_weights(self.main_model.get_weights())
+
+        self.replay_memory = deque(maxlen=replay_memory_size)
+
+        self.target_update_counter = 0
+
+        self.epsilon = epsilon_i
 
     #create CNN network for Q-value
     def intrinsic_create_model(self):
@@ -64,5 +78,41 @@ class Agent:
 
         return model
 
-    #
+    #updating replay memory with infos:
+    #[current state, current action, reward, next state, stop condition]
+    def update_replay_memory(self, current_state, current_action, reward, next_state, halting_cond):
+        self.replay_memory.append((current_state, current_action, reward, next_state, halting_cond))
+
+    #get Q-values
+    def get_q_values(self, x):
+        return self.main_model.predict(x)
+
+    #training
+    def train(self):
+
+        #guarantee the minimum num of samples
+        if len(self.replay_memory) < self.min_replay_size
+            return
+
+        #get current q values and next q values
+        samples = random.sample(self.replay_memory, self.minibatch_size)
+
+    #determining action
+    def get_action(self):
+        if self.epsilon > np.random.rand():
+            return np.random.randint(0, )
+        else:
+            predict =
+
+
+
+    #increase target update counter
+    def increase_target_update_counter(self):
+        self.target_update_counter += 1
+        if (self.target_update_counter >= self.target_update_freq):
+            self.target_model.set_weights(self.main_model.get_weights())
+            self.target_update_counter = 0
+
+
+
 
