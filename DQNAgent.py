@@ -53,15 +53,15 @@ class Agent:
     #create CNN network for Q-value
     def intrinsic_create_model(self):
         model = keras.Sequential()
-        model.add(keras.layers.Conv3D(8, 8, padding='same', input_shape=(64, 64, 3), activation='relu'))
-        model.add(keras.layers.MaxPool3D(2, 2, 2))
+        model.add(keras.layers.Conv3D(8, 8, padding='same', input_shape=(64, 64, 64, 3), activation='relu'))
+        model.add(keras.layers.MaxPool3D((2, 2, 2)))
         model.add(keras.layers.Dropout(0.1))
         model.add(keras.layers.Conv3D(16, 4, padding='same', activation='relu'))
-        model.add(keras.layers.MaxPool3D(2, 2, 2))
+        model.add(keras.layers.MaxPool3D((2, 2, 2)))
         model.add(keras.layers.Conv3D(16, 2, padding='same', activation='relu'))
-        model.add(keras.layers.MaxPool3D(2, 2, 2))
+        model.add(keras.layers.MaxPool3D((2, 2, 2)))
         model.add(keras.layers.Conv3D(16, 2, padding='same', activation='relu'))
-        model.add(keras.layers.MaxPool3D(2, 2, 2))
+        model.add(keras.layers.MaxPool3D((2, 2, 2)))
         model.add(keras.layers.Dropout(0.25))
         model.add(keras.layers.Conv3D(32, 2, padding='same', activation='relu'))
         model.add(keras.layers.Flatten())
@@ -69,7 +69,7 @@ class Agent:
         model.add(keras.layers.BatchNormalization())
         model.add(keras.layers.Dense(NUM_ACTION_SPACE, kernel_initializer='normal', activation='softmax'))
 
-        model.compile(optimizer='rmsprop', loss=keras.losses.categorical_crossentropy())
+        model.compile(optimizer='rmsprop', loss=keras.losses.CategoricalCrossentropy())
         model.summary()
 
         return model
@@ -117,7 +117,7 @@ class Agent:
     #determining action
     def get_action(self, state):
         if self.epsilon > np.random.rand():
-            return np.random.randint(0, NUM_ACTION_SPACE)
+            return np.random.randint(0, high=NUM_ACTION_SPACE)
         else:
             predict = np.argmax(self.main_model.predict(state))
             return np.asscalar(predict)
