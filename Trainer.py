@@ -5,7 +5,7 @@ import math
 import tensorflow.keras as keras
 from collections import deque
 import random
-import Agent
+import DQNAgent
 
 if __name__ == '__main__':
 
@@ -13,6 +13,8 @@ if __name__ == '__main__':
 
     obs = env.reset()
     done = False
+
+    agent = DQNAgent.Agent()
 
     while not done:
         obs, reward, done, act = env.step(env.action_space.noop())
