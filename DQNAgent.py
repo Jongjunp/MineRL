@@ -29,10 +29,7 @@ class Agent:
 
                  target_update_freq,
 
-                 minibatch_size,
-                 minibatch_step_size,
-
-                 episode_num):
+                 minibatch_size):
         self.replay_memory_size = replay_memory_size
         self.min_replay_size = min_replay_size
         self.epsilon_i = epsilon_i
@@ -42,8 +39,6 @@ class Agent:
         self.discount_rate = discount_rate
         self.target_update_freq = target_update_freq
         self.minibatch_size = minibatch_size
-        self.minibatch_step_size = minibatch_step_size
-        self.episode_num = episode_num
 
         self.main_model = self.intrinsic_create_model()
         self.target_model = self.intrinsic_create_model()
@@ -58,17 +53,17 @@ class Agent:
     #create CNN network for Q-value
     def intrinsic_create_model(self):
         model = keras.Sequential()
-        model.add(keras.layers.Conv2D(8, (8, 8), padding='same', input_shape=(64, 64, 3), activation='relu'))
-        model.add(keras.layers.MaxPool2D(2,2))
+        model.add(keras.layers.Conv3D(8, 8, padding='same', input_shape=(64, 64, 3), activation='relu'))
+        model.add(keras.layers.MaxPool3D(2, 2, 2))
         model.add(keras.layers.Dropout(0.1))
-        model.add(keras.layers.Conv2D(16, (4, 4), padding='same', activation='relu'))
-        model.add(keras.layers.MaxPool2D(2, 2))
-        model.add(keras.layers.Conv2D(16, (2, 2), padding='same', activation='relu'))
-        model.add(keras.layers.MaxPool2D(2, 2))
-        model.add(keras.layers.Conv2D(16, (2, 2), padding='same', activation='relu'))
-        model.add(keras.layers.MaxPool2D(2, 2))
+        model.add(keras.layers.Conv3D(16, 4, padding='same', activation='relu'))
+        model.add(keras.layers.MaxPool3D(2, 2, 2))
+        model.add(keras.layers.Conv3D(16, 2, padding='same', activation='relu'))
+        model.add(keras.layers.MaxPool3D(2, 2, 2))
+        model.add(keras.layers.Conv3D(16, 2, padding='same', activation='relu'))
+        model.add(keras.layers.MaxPool3D(2, 2, 2))
         model.add(keras.layers.Dropout(0.25))
-        model.add(keras.layers.Conv2D(32, (2, 2), padding='same', activation='relu'))
+        model.add(keras.layers.Conv3D(32, 2, padding='same', activation='relu'))
         model.add(keras.layers.Flatten())
         model.add(keras.layers.Dense(96, kernel_initializer='normal', activation='relu'))
         model.add(keras.layers.BatchNormalization())
