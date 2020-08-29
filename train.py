@@ -350,7 +350,7 @@ def main():
 
     # Sample code for illustration, add your training code below
     env = gym.make(MINERL_GYM_ENV)
-    #env.make_interactive(port=6666, realtime=True)
+    env.make_interactive(port=6666, realtime=True)
 
     #MY_CODE_BELOW_HERE
     done = False
@@ -369,7 +369,7 @@ def main():
         act_vectors.append(act['vector'])
         if len(act_vectors) > 1000:
             break
-    acts = np.concatenate(act_vectors).reshape(-1,64)
+    acts = np.concatenate(act_vectors).reshape(-1, 64)
 
     aicrowd_helper.training_start()
 
@@ -401,6 +401,14 @@ def main():
             current_state = next_state
 
         rewards.append(episode_reward)
+
+        # renewing act_vectors to maintain a variety of action
+        act_vectors = []
+        for _, act, _, _, _ in tqdm.tqdm(data.batch_iter(32, 16, 1)):
+            act_vectors.append(act['vector'])
+            if len(act_vectors) > 1000:
+                break
+        acts = np.concatenate(act_vectors).reshape(-1, 64)
 
         if episode%SAVE_FREQ==0 and episode!=0:
             agent.save(ACTOR_MODEL_PATH, TARGET_ACTOR_MODEL_PATH,
