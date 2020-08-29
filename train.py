@@ -9,6 +9,7 @@ import aicrowd_helper
 import gym
 import minerl
 import numpy as np
+import tqdm
 
 import tensorflow as tf
 from tensorflow.keras import optimizers
@@ -287,14 +288,18 @@ class Agent:
 
 
     #determining action -> it is ddpg but use epsilon-greedy first
-    def get_action(self, state, env):
+    def get_action(self, state, sample_actions):
         if self.epsilon > np.random.rand():
-            return env.action_space.sample()
+            sample_action = random.choice(sample_actions)
+            action = {
+                'vector': sample_action
+            }
+            return action
         else:
             pov = np.reshape(np.array(state['pov']), (1, 64, 64, 3))
             vector = np.reshape(np.array(state['vector']), (1, 64))
             input_state = {'pov': pov, 'vector': vector}
-            predicted_vector = self.actor.predict(input_state)
+            predicted_vector = self.actor(input_state)
             predicted_vector = np.ravel(predicted_vector).astype(np.float32)
             predicted_vector = np.clip(predicted_vector, LOW, HIGH)
             trained_action = {
@@ -341,11 +346,11 @@ def main():
     """
     # How to sample minerl data is document here:
     # http://minerl.io/docs/tutorials/data_sampling.html
-    #data = minerl.data.make(environment=MINERL_GYM_ENV)
+    data = minerl.data.make(environment=MINERL_GYM_ENV)
 
     # Sample code for illustration, add your training code below
     env = gym.make(MINERL_GYM_ENV)
-    #env.make_interactive(port=31415, realtime=True)
+    #env.make_interactive(port=6666, realtime=True)
 
     #MY_CODE_BELOW_HERE
     done = False
@@ -358,11 +363,20 @@ def main():
     step = 0
     rewards = []
 
+    # renewing act_vectors to maintain a variety of action
+    act_vectors = []
+    for _, act, _, _, _ in tqdm.tqdm(data.batch_iter(32, 16, 1)):
+        act_vectors.append(act['vector'])
+        if len(act_vectors) > 1000:
+            break
+    acts = np.concatenate(act_vectors).reshape(-1,64)
+
     aicrowd_helper.training_start()
 
     for episode in range(RUN_EPISODE_NUM):
 
         current_state = env.reset()
+        done = False
         episode_reward = 0
 
         #one episode per a loop.
@@ -370,7 +384,7 @@ def main():
 
             step += 1
             #determine action and apply action in MineRl env
-            action = agent.get_action(current_state, env)
+            action = agent.get_action(current_state, acts)
             next_state, reward, done, _ = env.step(action)
 
             # information aquisition
