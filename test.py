@@ -14,6 +14,7 @@ import gym
 import minerl
 import abc
 import numpy as np
+import train
 
 import coloredlogs
 coloredlogs.install(logging.DEBUG)

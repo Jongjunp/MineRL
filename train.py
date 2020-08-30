@@ -369,6 +369,7 @@ def main():
         act_vectors.append(act['vector'])
         if len(act_vectors) > 1000:
             break
+    random.shuffle(act_vectors)
     acts = np.concatenate(act_vectors).reshape(-1, 64)
 
     aicrowd_helper.training_start()
@@ -403,11 +404,12 @@ def main():
         rewards.append(episode_reward)
 
         # renewing act_vectors to maintain a variety of action
-        act_vectors = []
+        act_vectors.clear()
         for _, act, _, _, _ in tqdm.tqdm(data.batch_iter(32, 16, 1)):
             act_vectors.append(act['vector'])
             if len(act_vectors) > 1000:
                 break
+        random.shuffle(act_vectors)
         acts = np.concatenate(act_vectors).reshape(-1, 64)
 
         if episode%SAVE_FREQ==0 and episode!=0:
