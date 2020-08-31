@@ -4,6 +4,7 @@ import select
 import time
 import logging
 import os
+import math
 
 import aicrowd_helper
 import gym
@@ -65,14 +66,14 @@ parser = Parser('performance/',
                 initial_poll_timeout=600)
 
 #hyperparameters setting
-REPLAY_MEMORY_SIZE = 5000
-MIN_REPLAY_SIZE = 500
+REPLAY_MEMORY_SIZE = 10000
+MIN_REPLAY_SIZE = 2000
 
 RUN_EPISODE_NUM = 20000
 MIN_EPISODE_NUM = 1000
 
 EPSILON_I = 1
-EPSILON_DECAY = 0.1/(RUN_EPISODE_NUM-MIN_EPISODE_NUM)
+EPSILON_DECAY = 0.9/(RUN_EPISODE_NUM-MIN_EPISODE_NUM)
 EPSILON_MIN = 0.1
 
 ACTOR_LEARNING_RATE = 0.00075
@@ -152,9 +153,6 @@ class Agent:
         conv2d_layer_3 = layers.Conv2D(16, 2, padding='same', activation='relu')(dropout_2)
         maxpool_layer_3 = layers.MaxPool2D((2, 2))(conv2d_layer_3)
         dropout_3 = layers.Dropout(0.2)(maxpool_layer_3)
-        #conv2d_layer_4 = layers.Conv2D(16, 2, padding='same', activation='relu')(dropout_3)
-        #maxpool_layer_4 = layers.MaxPool2D((2, 2))(conv2d_layer_4)
-        #dropout_4 = layers.Dropout(0.25)(maxpool_layer_4)
         conv2d_layer_5 = layers.Conv2D(32, 2, padding='same', activation='relu')(dropout_3)
         flatten = layers.Flatten()(conv2d_layer_5)
         pov_dense = layers.Dense(64, kernel_initializer='normal', activation='relu')(flatten)
@@ -189,9 +187,6 @@ class Agent:
         conv2d_layer_3 = layers.Conv2D(16, 2, padding='same', activation='relu')(dropout_2)
         maxpool_layer_3 = layers.MaxPool2D((2, 2))(conv2d_layer_3)
         dropout_3 = layers.Dropout(0.2)(maxpool_layer_3)
-        #conv2d_layer_4 = layers.Conv2D(16, 2, padding='same', activation='relu')(dropout_3)
-        #maxpool_layer_4 = layers.MaxPool2D((2, 2))(conv2d_layer_4)
-        #dropout_4 = layers.Dropout(0.25)(maxpool_layer_4)
         conv2d_layer_5 = layers.Conv2D(32, 2, padding='same', activation='relu')(dropout_3)
         flatten = layers.Flatten()(conv2d_layer_5)
         pov_dense = layers.Dense(64, kernel_initializer='normal', activation='relu')(flatten)
@@ -350,7 +345,7 @@ def main():
 
     # Sample code for illustration, add your training code below
     env = gym.make(MINERL_GYM_ENV)
-    env.make_interactive(port=6666, realtime=True)
+    #env.make_interactive(port=6666, realtime=True)
 
     #MY_CODE_BELOW_HERE
     done = False
@@ -372,9 +367,15 @@ def main():
     random.shuffle(act_vectors)
     acts = np.concatenate(act_vectors).reshape(-1, 64)
 
-    aicrowd_helper.training_start()
-
     for episode in range(RUN_EPISODE_NUM):
+
+        if (step > MINERL_TRAINING_MAX_STEPS):
+            agent.save(ACTOR_MODEL_PATH, TARGET_ACTOR_MODEL_PATH,
+                       CRITIC_MODEL_PATH, TARGET_CRITIC_MODEL_PATH)
+            print("Save model {}".format(episode))
+            print("step: {} / reward: {:.2f}"
+                  .format(step, np.mean(rewards)))
+            break
 
         current_state = env.reset()
         done = False
