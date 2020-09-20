@@ -16,6 +16,8 @@ import abc
 import numpy as np
 import train
 
+import tensorflow.keras.models as Model
+
 import coloredlogs
 coloredlogs.install(logging.DEBUG)
 
@@ -122,6 +124,16 @@ class MineRLMatrixAgent(MineRLAgentBase):
         self.flatten_obs = lambda obs: np.concatenate([obs['pov'].flatten()/255.0, obs['vector'].flatten()])
         self.act = lambda flat_obs: {'vector': np.clip(self.matrix.dot(flat_obs), -1,1)}
 
+        ACTOR_MODEL_PATH = 'train/actor_model'
+        TARGET_ACTOR_MODEL_PATH = 'train/target_actor_model'
+        CRITIC_MODEL_PATH = 'train/critic_model'
+        TARGET_CRITIC_MODEL_PATH = 'train/target_critic_model'
+
+        self.actor = Model.load_model(ACTOR_MODEL_PATH)
+        self.target_actor = Model.load_model(TARGET_ACTOR_MODEL_PATH)
+        self.critic = Model.load_model(CRITIC_MODEL_PATH)
+        self.target_critic = Model.load_model(TARGET_CRITIC_MODEL_PATH)
+
 
     def run_agent_on_episode(self, single_episode_env : Episode):
         """Runs the agent on a SINGLE episode.
@@ -133,6 +145,7 @@ class MineRLMatrixAgent(MineRLAgentBase):
         done = False
         while not done:
             obs,reward,done,_ = single_episode_env.step(self.act(self.flatten_obs(obs)))
+
 
 
 class MineRLRandomAgent(MineRLAgentBase):
